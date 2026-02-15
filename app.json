@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "GhostJobs",
+    "slug": "ghostjobs",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#7C3AED"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ghostjobs.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#7C3AED"
+      },
+      "package": "com.ghostjobs.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
