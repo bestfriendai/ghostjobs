@@ -1,23 +1,28 @@
 import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import { useJobStore } from '@/src/store/jobStore';
+import type { Job } from '@/src/store/jobStore';
 
-interface HistoryItem {
-  id: string;
-  title: string;
-  company: string;
-  scannedAt: string;
-  ghostScore: number;
-}
+const formatScanTime = (iso?: string) => {
+  if (!iso) return 'Unknown';
+  const time = new Date(iso).getTime();
+  if (Number.isNaN(time)) return iso;
 
-const mockHistory: HistoryItem[] = [
-  { id: '1', title: 'UX Designer', company: 'CreativeLabs', scannedAt: '2 hours ago', ghostScore: 78 },
-  { id: '2', title: 'Backend Developer', company: 'TechStart', scannedAt: 'Yesterday', ghostScore: 34 },
-  { id: '3', title: 'Sales Representative', company: 'SalesForce Pro', scannedAt: '2 days ago', ghostScore: 95 },
-  { id: '4', title: 'Project Manager', company: 'ManageCo', scannedAt: '3 days ago', ghostScore: 12 },
-  { id: '5', title: 'Data Scientist', company: 'AI Innovations', scannedAt: '1 week ago', ghostScore: 56 },
-];
+  const diffMinutes = Math.floor((Date.now() - time) / (1000 * 60));
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes} min ago`;
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+};
 
 export default function HistoryScreen() {
-  const renderHistoryItem = ({ item }: { item: HistoryItem }) => {
+  const history = useJobStore((state) => state.history);
+
+  const ghostJobs = history.filter((item) => item.ghostScore >= 80).length;
+  const cleanJobs = history.filter((item) => item.ghostScore < 50).length;
+
+  const renderHistoryItem = ({ item }: { item: Job }) => {
     const getScoreColor = (score: number) => {
       if (score >= 80) return '#EF4444';
       if (score >= 50) return '#F59E0B';
@@ -42,7 +47,7 @@ export default function HistoryScreen() {
           </View>
         </View>
         <View style={styles.historyFooter}>
-          <Text style={styles.scanTime}>🕐 {item.scannedAt}</Text>
+          <Text style={styles.scanTime}>🕐 {formatScanTime(item.scannedAt)}</Text>
           <Text style={styles.ghostScore}>{item.ghostScore}% ghost</Text>
         </View>
       </TouchableOpacity>
@@ -53,21 +58,21 @@ export default function HistoryScreen() {
     <View style={styles.container}>
       <View style={styles.statsContainer}>
         <View style={styles.statCard}>
-          <Text style={styles.statNumber}>12</Text>
+          <Text style={styles.statNumber}>{history.length}</Text>
           <Text style={styles.statLabel}>Jobs Scanned</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: '#EF4444' }]}>5</Text>
+          <Text style={[styles.statNumber, { color: '#EF4444' }]}>{ghostJobs}</Text>
           <Text style={styles.statLabel}>Ghost Jobs</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: '#10B981' }]}>4</Text>
+          <Text style={[styles.statNumber, { color: '#10B981' }]}>{cleanJobs}</Text>
           <Text style={styles.statLabel}>Clean Jobs</Text>
         </View>
       </View>
 
       <FlatList
-        data={mockHistory}
+        data={history}
         keyExtractor={(item) => item.id}
         renderItem={renderHistoryItem}
         contentContainerStyle={styles.listContent}

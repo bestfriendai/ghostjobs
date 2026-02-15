@@ -51,3 +51,27 @@ npx expo start
 ## License
 
 MIT
+
+## API Configuration
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```bash
+# Job API (for ghost job detection)
+JOB_API_KEY=your_job_api_key
+JOB_API_URL=https://api.ghostjobs.com/v1
+
+# AI Scoring Service
+AI_SCORING_KEY=your_ai_scoring_key
+```
+
+### RevenueCat Configuration
+
+1. Create an account at [RevenueCat.com](https://revenuecat.com)
+2. Create products in App Store Connect / Google Play Console:
+   - Monthly: $2.99/month - `ghostjobs_monthly`
+   - Annual: $14.99/year - `ghostjobs_annual`
+3. Configure products in RevenueCat dashboard
+4. Add your API key to the purchases service

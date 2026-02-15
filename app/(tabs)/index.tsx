@@ -1,29 +1,13 @@
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-
-interface Job {
-  id: string;
-  title: string;
-  company: string;
-  location: string;
-  postedDate: string;
-  ghostScore: number;
-  source: string;
-}
-
-const mockJobs: Job[] = [
-  { id: '1', title: 'Senior Software Engineer', company: 'TechCorp', location: 'Remote', postedDate: '30 days ago', ghostScore: 92, source: 'Indeed' },
-  { id: '2', title: 'Marketing Manager', company: 'GrowthStartup', location: 'New York, NY', postedDate: '45 days ago', ghostScore: 85, source: 'LinkedIn' },
-  { id: '3', title: 'Product Designer', company: 'DesignStudio', location: 'San Francisco, CA', postedDate: '7 days ago', ghostScore: 23, source: 'Indeed' },
-  { id: '4', title: 'Customer Success Rep', company: 'SaaS Inc', location: 'Austin, TX', postedDate: '60 days ago', ghostScore: 98, source: 'ZipRecruiter' },
-  { id: '5', title: 'Data Analyst', company: 'DataCo', location: 'Chicago, IL', postedDate: '14 days ago', ghostScore: 45, source: 'Indeed' },
-];
+import { useJobStore } from '@/src/store/jobStore';
+import type { Job } from '@/src/store/jobStore';
 
 export default function JobsScreen() {
   const router = useRouter();
   const [search, setSearch] = useState('');
-  const [jobs] = useState<Job[]>(mockJobs);
+  const jobs = useJobStore((state) => state.jobs);
 
   const getGhostLevel = (score: number) => {
     if (score >= 80) return { label: 'LIKELY GHOST', color: '#EF4444' };
@@ -84,7 +68,7 @@ export default function JobsScreen() {
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyText}>No jobs found</Text>
+            <Text style={styles.emptyText}>No scanned jobs yet. Start from the Scanner tab.</Text>
           </View>
         }
       />
@@ -194,5 +178,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#9CA3AF',
+    textAlign: 'center',
   },
 });

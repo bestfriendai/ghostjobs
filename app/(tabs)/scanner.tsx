@@ -1,13 +1,12 @@
 import { View, Text, TouchableOpacity, StyleSheet, TextInput, ScrollView, Alert } from 'react-native';
 import { useState } from 'react';
 import { useRouter } from 'expo-router';
-
-type Platform = 'indeed' | 'linkedin' | 'ziprecruiter' | 'glassdoor';
+import { buildJobFromUrl } from '@/src/services/jobScanner';
+import { useJobStore } from '@/src/store/jobStore';
 
 interface ScanResult {
   id: string;
   url: string;
-  platform: Platform;
   status: 'scanning' | 'clean' | 'ghost';
   ghostScore?: number;
 }
@@ -17,13 +16,8 @@ export default function ScannerScreen() {
   const [url, setUrl] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [results, setResults] = useState<ScanResult[]>([]);
-
-  const platforms: { id: Platform; name: string; icon: string }[] = [
-    { id: 'indeed', name: 'Indeed', icon: '💼' },
-    { id: 'linkedin', name: 'LinkedIn', icon: '🔗' },
-    { id: 'ziprecruiter', name: 'ZipRecruiter', icon: '📋' },
-    { id: 'glassdoor', name: 'Glassdoor', icon: '🚪' },
-  ];
+  const addJob = useJobStore((state) => state.addJob);
+  const addToHistory = useJobStore((state) => state.addToHistory);
 
   const handleScan = async () => {
     if (!url.trim()) {
@@ -31,22 +25,34 @@ export default function ScannerScreen() {
       return;
     }
 
+    try {
+      new URL(url.trim());
+    } catch {
+      Alert.alert('Invalid URL', 'Please enter a valid full URL (including https://)');
+      return;
+    }
+
     setIsScanning(true);
 
-    // Simulate scanning delay
-    setTimeout(() => {
-      const mockScore = Math.floor(Math.random() * 100);
+    try {
+      const { job } = await buildJobFromUrl(url.trim());
+      addJob(job);
+      addToHistory(job);
+
       const newResult: ScanResult = {
-        id: Date.now().toString(),
-        url: url,
-        platform: 'indeed',
-        status: mockScore > 60 ? 'ghost' : 'clean',
-        ghostScore: mockScore,
+        id: job.id,
+        url: job.url || url.trim(),
+        status: job.ghostScore > 60 ? 'ghost' : 'clean',
+        ghostScore: job.ghostScore,
       };
-      setResults([newResult, ...results]);
-      setIsScanning(false);
+
+      setResults((prev) => [newResult, ...prev]);
       setUrl('');
-    }, 2000);
+    } catch (error) {
+      Alert.alert('Scan failed', 'Unable to analyze this URL right now. Please try again.');
+    } finally {
+      setIsScanning(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -99,21 +105,9 @@ export default function ScannerScreen() {
         </TouchableOpacity>
       </View>
 
-      <View style={styles.platformsSection}>
-        <Text style={styles.sectionTitle}>Quick Scan</Text>
-        <View style={styles.platformGrid}>
-          {platforms.map((platform) => (
-            <TouchableOpacity key={platform.id} style={styles.platformCard}>
-              <Text style={styles.platformIcon}>{platform.icon}</Text>
-              <Text style={styles.platformName}>{platform.name}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
       {results.length > 0 && (
         <View style={styles.resultsSection}>
-          <Text style={styles.sectionTitle}>Scan Results</Text>
+          <Text style={styles.sectionTitle}>Recent Scan Results</Text>
           {results.map((result) => (
             <View key={result.id} style={styles.resultCard}>
               <View style={styles.resultHeader}>
@@ -223,7 +217,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
   },
-  platformsSection: {
+  resultsSection: {
     marginBottom: 24,
   },
   sectionTitle: {
@@ -231,32 +225,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 12,
-  },
-  platformGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  platformCard: {
-    width: '47%',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  platformIcon: {
-    fontSize: 28,
-    marginBottom: 8,
-  },
-  platformName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  resultsSection: {
-    marginBottom: 24,
   },
   resultCard: {
     backgroundColor: '#fff',
